@@ -1,0 +1,68 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+
+version: 2
+
+project_name: tricount
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - binary: tricount
+    env:
+      - CGO_ENABLED=0
+    main: ./cmd/tricount
+    goos:
+      - linux
+      - windows
+      - darwin
+    ldflags:
+      - -X github.com/agentzhao/tricount-cli/internal/cli.Version={{ .Version }}
+      - -X github.com/agentzhao/tricount-cli/internal/cli.Commit={{ .ShortCommit }}
+      - -X github.com/agentzhao/tricount-cli/internal/cli.BuildDate={{ .Date }}
+
+archives:
+  - formats: [tar.gz]
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  groups:
+    - title: "Breaking Changes"
+      regexp: '^.*?(BREAKING CHANGE|!:) *.*$'
+      order: 0
+    - title: Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: "Bug Fixes"
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: "Other Changes"
+      order: 999
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+release:
+  github:
+    owner: agentzhao
+    name: tricount-cli
+  footer: >-
+
+    ---
+
+    Released by [GoReleaser](https://github.com/goreleaser/goreleaser).

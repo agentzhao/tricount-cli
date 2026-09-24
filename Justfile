@@ -1,0 +1,72 @@
+# Justfile for tricount-cli
+
+# Default recipe - show available commands
+default:
+    @just --list
+
+# Run the CLI in development mode
+# Usage: just dev [arguments]
+# Example: just dev group --help
+dev *args:
+    go run ./cmd/tricount {{args}}
+
+# Build the CLI binary
+# Usage: just build
+build:
+    go build -o tricount ./cmd/tricount
+
+# Build and install the binary
+# Usage: just install
+install:
+    go install ./cmd/tricount
+
+# Run tests
+# Usage: just test
+test:
+    go test ./...
+
+# Format code
+# Usage: just fmt
+fmt:
+    go fmt ./...
+
+# Clean build artifacts
+# Usage: just clean
+clean:
+    rm -f tricount
+
+# Publish using goreleaser
+# Usage: just publish
+#        just publish <<'EOF'
+#        ## Changes
+#        - ...
+#        EOF
+# Piped stdin becomes the GitHub release notes. With no stdin, goreleaser
+# generates notes from commits. The current commit must already be tagged.
+# Install: https://goreleaser.com/install/
+publish:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if ! command -v goreleaser >/dev/null; then
+      echo "Error: goreleaser not found. Install from https://goreleaser.com/install/" >&2
+      exit 1
+    fi
+    extra=()
+    if [[ ! -t 0 ]]; then
+      notes=$(mktemp)
+      trap 'rm -f "$notes"' EXIT
+      cat > "$notes"
+      extra+=(--release-notes "$notes")
+    fi
+    goreleaser release --clean "${extra[@]}"
+
+# Publish using goreleaser (snapshot/dry-run)
+# Usage: just publish-snapshot
+publish-snapshot:
+    @which goreleaser > /dev/null || (echo "Error: goreleaser not found. Install from https://goreleaser.com/install/" && exit 1)
+    goreleaser release --snapshot --clean
+
+# Run the built binary
+# Usage: just run [arguments]
+run *args:
+    ./tricount {{args}}
