@@ -54,33 +54,15 @@ Next:
 			summary += fmt.Sprintf(" The shares are off by %s %s.", report.Imbalance, tc.Currency)
 		}
 		summary += archivedSuffix(tc)
-		next := []NextStep{
-			{Command: withToken(tc.Token, "expense list"), Why: "See the transactions behind these balances."},
-		}
-		if len(report.Payments) > 0 {
-			p := report.Payments[0]
-			next = append([]NextStep{{
-				Command: fmt.Sprintf("tricount reimbursement add --token %s --payer %s --receiver %s --amount %s", shellArg(tc.Token), shellArg(p.FromName), shellArg(p.ToName), trimAmount(p.Amount)),
-				Why:     "Record the first suggested payment. Repeat for the other payments.",
-			}}, next...)
-		} else {
-			next = append(next, NextStep{Command: withToken(tc.Token, "expense add --help"), Why: "Add an expense if the group should not be settled yet."})
-		}
 		return writeResult(cmd, Result{
 			Summary: summary,
 			Data: map[string]any{
 				"group":    viewSummary(tc),
 				"balances": report,
 			},
-			Next:  next,
 			Human: formatBalances(report),
 		})
 	},
-}
-
-func trimAmount(raw string) string {
-	// FormatMinor always has two decimals. Suggested commands read better without trailing zeros.
-	return raw
 }
 
 func init() {

@@ -76,16 +76,8 @@ Next:
 			views = append(views, viewSummary(g))
 		}
 		summary := fmt.Sprintf("%d groups are synced to this device.", len(views))
-		next := []NextStep{
-			{Command: "tricount group get --help", Why: "Read one group, including members and transactions."},
-			{Command: "tricount group join --help", Why: "Sync a share link that is not in this list yet."},
-		}
 		if len(views) == 0 {
 			summary = "No groups are synced to this device yet."
-			next = []NextStep{
-				{Command: "tricount group join --help", Why: "Open a group from its share link."},
-				{Command: "tricount group create --help", Why: "Create a new group and get a share token."},
-			}
 		}
 		return writeResult(cmd, Result{
 			Summary: summary,
@@ -93,7 +85,6 @@ Next:
 				"groups": views,
 				"count":  len(views),
 			},
-			Next:  next,
 			Human: formatGroupLines(views),
 		})
 	},
@@ -129,7 +120,6 @@ Next:
 		return writeResult(cmd, Result{
 			Summary: summary,
 			Data:    view,
-			Next:    nextRead(tc.Token),
 			Human:   formatMembers(view.Members) + "\n" + formatBalances(view.Balances),
 		})
 	},
@@ -164,7 +154,6 @@ Next:
 		return writeResult(cmd, Result{
 			Summary: fmt.Sprintf("Joined %s. Share link %s. %d members, %d transactions.", tc.Title, tc.ShareURL(), len(tc.Members), len(tc.Transactions)),
 			Data:    view,
-			Next:    nextRead(tc.Token),
 			Human:   formatMembers(view.Members),
 		})
 	},
@@ -209,19 +198,11 @@ Next:
 			return writeResult(cmd, Result{
 				Summary: fmt.Sprintf("Created group %d but reading it back failed: %v. Look for it with tricount group list.", id, err),
 				Data:    map[string]any{"id": id, "title": title, "currency": currency},
-				Next: []NextStep{
-					{Command: "tricount group list", Why: "Find the new group and its sharing token."},
-				},
 			})
 		}
 		return writeResult(cmd, Result{
 			Summary: fmt.Sprintf("Created %s (%s). Share link %s.", tc.Title, tc.Currency, tc.ShareURL()),
 			Data:    viewGroup(tc),
-			Next: []NextStep{
-				{Command: withToken(tc.Token, "member add --name Alice --name Bob"), Why: "Add the people who share expenses. Repeat --name for each person."},
-				{Command: withToken(tc.Token, "expense add --help"), Why: "Record the first expense once members exist."},
-				{Command: "tricount group list", Why: "See this group among the ones synced to this device."},
-			},
 		})
 	},
 }
@@ -287,7 +268,6 @@ Next:
 		return writeResult(cmd, Result{
 			Summary: fmt.Sprintf("Updated %s (%s).", updated.Title, updated.Token),
 			Data:    viewSummary(updated),
-			Next:    nextRead(updated.Token),
 		})
 	},
 }
@@ -358,10 +338,6 @@ Next:
 		return writeResult(cmd, Result{
 			Summary: fmt.Sprintf("Removed %s from this device. The share link %s still opens it.", tc.Title, tc.ShareURL()),
 			Data:    viewSummary(tc),
-			Next: []NextStep{
-				{Command: "tricount group list", Why: "Confirm the group is no longer synced here."},
-				{Command: withToken(tc.Token, "group join"), Why: "Sync this share link onto the device again."},
-			},
 		})
 	},
 }
@@ -396,9 +372,6 @@ Next:
 		return writeResult(cmd, Result{
 			Summary: fmt.Sprintf("Deleted %s (id %d, token %s).", tc.Title, tc.ID, tc.Token),
 			Data:    viewSummary(tc),
-			Next: []NextStep{
-				{Command: "tricount group list", Why: "Confirm the remaining groups on this device."},
-			},
 		})
 	},
 }
@@ -452,10 +425,6 @@ Next:
 				"archived": archivedViews,
 				"deleted":  summaries(res.Deleted),
 			},
-			Next: []NextStep{
-				{Command: "tricount group list", Why: "See every group now synced to this device."},
-				{Command: "tricount group get --help", Why: "Read members and transactions for one token."},
-			},
 			Human: formatGroupLines(append(activeViews, archivedViews...)),
 		})
 	},
@@ -478,17 +447,9 @@ func setGroupStatus(cmd *cobra.Command, status, verb string) error {
 		tc.Status = status
 		updated = tc
 	}
-	next := nextRead(updated.Token)
-	if status == "READ_ONLY" {
-		next = append([]NextStep{{
-			Command: withToken(updated.Token, "group unarchive"),
-			Why:     "Make the group editable again.",
-		}}, next...)
-	}
 	return writeResult(cmd, Result{
 		Summary: fmt.Sprintf("%s %s (%s). Status is %s.", verb, updated.Title, updated.Token, updated.Status),
 		Data:    viewSummary(updated),
-		Next:    next,
 	})
 }
 

@@ -95,11 +95,6 @@ Next:
 				"count":        len(views),
 				"notes":        amountNotes,
 			},
-			Next: []NextStep{
-				{Command: withToken(tc.Token, "expense get --transaction <id>"), Why: "Read one row. Replace <id> with the id field."},
-				{Command: withToken(tc.Token, "expense add --help"), Why: "Add an equally shared expense."},
-				{Command: withToken(tc.Token, "balance show"), Why: "See who owes whom from these transactions."},
-			},
 			Human: formatTransactions(views),
 		})
 	},
@@ -133,10 +128,6 @@ Next:
 				"group":       viewSummary(tc),
 				"transaction": view,
 				"notes":       amountNotes,
-			},
-			Next: []NextStep{
-				{Command: withToken(tc.Token, fmt.Sprintf("expense edit --transaction %d --help", tx.ID)), Why: "Change this transaction."},
-				{Command: withToken(tc.Token, "balance show"), Why: "See the group balances that include this transaction."},
 			},
 		})
 	},
@@ -478,11 +469,7 @@ Next:
 		return writeResult(cmd, Result{
 			Summary: fmt.Sprintf("Deleted transaction %d (%s) from %s.", tx.ID, tx.Description, tc.Title),
 			Data:    data,
-			Next: []NextStep{
-				{Command: withToken(tc.Token, "expense list"), Why: "Confirm the remaining transactions."},
-				{Command: withToken(tc.Token, "balance show"), Why: "See who owes whom after the deletion."},
-			},
-			Human: human,
+			Human:   human,
 		})
 	},
 }
@@ -674,12 +661,7 @@ func writeUpdated(cmd *cobra.Command, tc tricount.Tricount, id int, summary stri
 	return writeResult(cmd, Result{
 		Summary: summary,
 		Data:    data,
-		Next: []NextStep{
-			{Command: withToken(tc.Token, "balance show"), Why: "See who owes whom after this change."},
-			{Command: withToken(tc.Token, fmt.Sprintf("expense get --transaction %d", id)), Why: "Read this transaction, including allocations."},
-			{Command: withToken(tc.Token, "expense list"), Why: "List every transaction in the group."},
-		},
-		Human: human,
+		Human:   human,
 	})
 }
 

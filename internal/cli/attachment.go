@@ -81,10 +81,6 @@ Next:
 				"content_type": contentType,
 				"group":        viewSummary(tc),
 			},
-			Next: []NextStep{
-				{Command: withToken(tc.Token, fmt.Sprintf("attachment add --transaction <id> --attachment %d", id)), Why: "Link this receipt to an existing transaction. <id> comes from tricount expense list."},
-				{Command: withToken(tc.Token, fmt.Sprintf("expense add --attachment %d --help", id)), Why: "Or include the receipt while creating an expense."},
-			},
 		})
 	},
 }
@@ -187,10 +183,6 @@ Next:
 				"images": views,
 				"count":  len(views),
 			},
-			Next: []NextStep{
-				{Command: withToken(tc.Token, "attachment gallery upload --file photo.jpg"), Why: "Add an image to this gallery."},
-				{Command: withToken(tc.Token, "attachment gallery delete --uuid <uuid> --yes"), Why: "Remove an image. Replace <uuid> with the uuid field."},
-			},
 		})
 	},
 }
@@ -231,9 +223,6 @@ Next:
 				"content_type": contentType,
 				"group":        viewSummary(tc),
 			},
-			Next: []NextStep{
-				{Command: withToken(tc.Token, "attachment gallery list"), Why: "See the new image and its URL."},
-			},
 		})
 	},
 }
@@ -271,9 +260,6 @@ Next:
 		return writeResult(cmd, Result{
 			Summary: fmt.Sprintf("Deleted gallery image %s from %s.", id, tc.Title),
 			Data:    map[string]any{"uuid": id, "group": viewSummary(tc)},
-			Next: []NextStep{
-				{Command: withToken(tc.Token, "attachment gallery list"), Why: "Confirm the remaining gallery images."},
-			},
 		})
 	},
 }
@@ -301,9 +287,6 @@ func changeAttachment(cmd *cobra.Command, add bool) error {
 				return writeResult(cmd, Result{
 					Summary: fmt.Sprintf("Transaction %d already has receipt %d.", tx.ID, attachmentID),
 					Data:    map[string]any{"transaction": viewTransaction(tc, tx)},
-					Next: []NextStep{
-						{Command: withToken(tc.Token, fmt.Sprintf("expense get --transaction %d", tx.ID)), Why: "Read the transaction and its receipt ids."},
-					},
 				})
 			}
 		}

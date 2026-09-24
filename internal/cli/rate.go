@@ -59,10 +59,6 @@ Next:
 				"count": len(rates),
 				"note":  "1 unit of from equals rate units of target.",
 			},
-			Next: []NextStep{
-				{Command: fmt.Sprintf("tricount rate get --from %s --to EUR", from), Why: "Read one pair. Replace EUR with the group currency."},
-				{Command: "tricount expense add --help", Why: "Record a foreign expense. Omit --exchange-rate to use one of these rates."},
-			},
 		})
 	},
 }
@@ -100,10 +96,6 @@ Next:
 		return writeResult(cmd, Result{
 			Summary: fmt.Sprintf("1 %s = %s %s.", from, rate.Rate, to),
 			Data:    rate,
-			Next: []NextStep{
-				{Command: fmt.Sprintf("tricount expense add --help"), Why: "Pass --currency " + from + " and --exchange-rate " + rate.Rate + " when the group currency is " + to + "."},
-				{Command: fmt.Sprintf("tricount rate list --from %s", from), Why: "See the other target currencies."},
-			},
 		})
 	},
 }

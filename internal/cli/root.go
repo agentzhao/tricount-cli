@@ -8,8 +8,10 @@ import (
 	"runtime"
 	"runtime/debug"
 	"strings"
+	"sync"
 	"syscall"
 
+	"github.com/agentzhao/tricount-cli/internal/update"
 	"github.com/spf13/cobra"
 )
 
@@ -18,6 +20,8 @@ var (
 	humanOutput     bool
 	assumeYes       bool
 	activeSession   *session
+	notifyWg        sync.WaitGroup
+	noticeOutput    string
 )
 
 // Version, Commit and BuildDate may be overridden at build time via ldflags.
@@ -85,6 +89,14 @@ var rootCmd = &cobra.Command{
 	Short:         "Tricount CLI for expense groups",
 	SilenceErrors: true,
 	SilenceUsage:  true,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// update checks GitHub itself. Skip the daily notice so it does not
+		// print after a binary has just been replaced.
+		if cmd.Name() == "update" {
+			return
+		}
+		update.CheckForUpdateInBackground(Version, &notifyWg, &noticeOutput)
+	},
 	Long: `Tricount CLI talks to the unofficial Tricount (bunq) API.
 
 Start here, then add --help one level deeper:
@@ -104,7 +116,7 @@ Credentials:
   See: tricount auth --help
 
 Output:
-  JSON on stdout, including a summary and a next list of commands.
+  JSON on stdout: ok and data.
   Add --human for a short text summary. Errors go to stderr.
   Destructive commands never prompt. Pass --yes to confirm them.
 
@@ -122,7 +134,8 @@ Next:
   tricount auth --help
   tricount group --help
   tricount expense --help
-  tricount balance --help`,
+  tricount balance --help
+  tricount update --help`,
 	Example: `  tricount --help
   tricount group --help
   tricount group get --token tABC123xyz`,
@@ -151,6 +164,10 @@ func Execute() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	cmd, err := rootCmd.ExecuteContextC(ctx)
+	notifyWg.Wait()
+	if noticeOutput != "" {
+		fmt.Fprint(os.Stderr, noticeOutput)
+	}
 	if err != nil {
 		if isCommandLineError(err) {
 			if cmd == nil {
@@ -218,5 +235,5 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&credentialsPath, "credentials", "", "Credentials file. Default: ~/.config/tricount/credentials.json, or $TRICOUNT_CREDENTIALS. --credentials wins over the environment variable.")
 	rootCmd.PersistentFlags().BoolVar(&humanOutput, "human", false, "Print a short text summary instead of JSON.")
-	rootCmd.PersistentFlags().BoolVar(&assumeYes, "yes", false, "Confirm a destructive command. The CLI does not prompt, so delete, leave, and reset require --yes.")
+	rootCmd.PersistentFlags().BoolVarP(&assumeYes, "yes", "y", false, "Confirm a destructive command. The CLI does not prompt, so delete, leave, reset, and update require --yes.")
 }

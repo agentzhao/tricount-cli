@@ -67,10 +67,6 @@ Next:
 			},
 		}
 		summary := fmt.Sprintf("%d expense categories and %d group categories.", len(expenses), len(tricount.GroupCategories()))
-		next := []NextStep{
-			{Command: "tricount expense add --help", Why: "Use an expense category while recording an expense."},
-			{Command: "tricount group update --help", Why: "Set a category on the group itself."},
-		}
 		if cmd.Flags().Changed("token") || cmd.Flags().Changed("id") {
 			tc, err := resolveRead(cmd)
 			if err != nil {
@@ -80,10 +76,6 @@ Next:
 			data["custom_categories"] = custom
 			data["group"] = viewSummary(tc)
 			summary = fmt.Sprintf("%s %s uses %d custom labels.", summary, tc.Title, len(custom))
-			next = append([]NextStep{{
-				Command: withToken(tc.Token, "expense list"),
-				Why:     "See which transactions use these categories.",
-			}}, next...)
 		}
 		human := ""
 		if len(lines) > 0 {
@@ -92,7 +84,6 @@ Next:
 		return writeResult(cmd, Result{
 			Summary: summary,
 			Data:    data,
-			Next:    next,
 			Human:   human,
 		})
 	},

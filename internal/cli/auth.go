@@ -75,10 +75,6 @@ Next:
 		return writeResult(cmd, Result{
 			Summary: summary,
 			Data:    data,
-			Next: []NextStep{
-				{Command: "tricount auth whoami", Why: "Contact the API with this device identity."},
-				{Command: "tricount group list", Why: "List groups already synced to this device."},
-			},
 		})
 	},
 }
@@ -115,10 +111,6 @@ Next:
 				"status":           user.Status,
 				"credentials_path": s.path,
 				"app_id":           s.creds.AppID,
-			},
-			Next: []NextStep{
-				{Command: "tricount group list", Why: "List groups synced to this device."},
-				{Command: "tricount group join --help", Why: "Open a group from its share link."},
 			},
 		})
 	},
@@ -160,10 +152,6 @@ Next:
 				"path":    path,
 				"source":  source,
 				"deleted": removed,
-			},
-			Next: []NextStep{
-				{Command: "tricount auth status", Why: "Confirm the credentials file is gone."},
-				{Command: "tricount group join --help", Why: "Open a group again with its sharing token."},
 			},
 		})
 	},

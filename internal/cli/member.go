@@ -70,10 +70,6 @@ Next:
 				"members": views,
 				"count":   len(views),
 			},
-			Next: []NextStep{
-				{Command: withToken(tc.Token, "member add --name Alice"), Why: "Add a person who can pay or share an expense."},
-				{Command: withToken(tc.Token, "expense add --help"), Why: "Record an expense once you know the member names."},
-			},
 			Human: formatMembers(views),
 		})
 	},
@@ -131,10 +127,6 @@ Next:
 				"members": views,
 				"added":   names,
 			},
-			Next: []NextStep{
-				{Command: withToken(updated.Token, "expense add --help"), Why: "Record an expense paid by one of these members."},
-				{Command: withToken(updated.Token, "member list"), Why: "Copy a membership uuid when two people share a name."},
-			},
 			Human: formatMembers(views),
 		})
 	},
@@ -186,9 +178,6 @@ Next:
 				"group":    viewSummary(updated),
 				"previous": viewMember(member),
 				"name":     name,
-			},
-			Next: []NextStep{
-				{Command: withToken(updated.Token, "member list"), Why: "Confirm the new display name and uuid."},
 			},
 		})
 	},
@@ -249,9 +238,6 @@ Next:
 				"members": views,
 				"target":  viewMember(member),
 			},
-			Next: []NextStep{
-				{Command: withToken(updated.Token, "member list"), Why: "See who remains, including anyone marked DELETED."},
-			},
 			Human: formatMembers(views),
 		})
 	},
@@ -301,10 +287,6 @@ Next:
 			Data: map[string]any{
 				"group":         viewSummary(updated),
 				"linked_member": viewMember(member),
-			},
-			Next: []NextStep{
-				{Command: withToken(tc.Token, "group get"), Why: "Confirm linked_member on the group."},
-				{Command: withToken(tc.Token, "expense add --help"), Why: "Record an expense. The payer can be any member, not only the linked one."},
 			},
 		})
 	},

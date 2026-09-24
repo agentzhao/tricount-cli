@@ -2,7 +2,7 @@
 
 Command-line client for [Tricount](https://tricount.com) expense groups. It speaks the same unofficial registry API as [tricount-api](https://pypi.org/project/tricount-api/). The module lives at [github.com/agentzhao/tricount-cli](https://github.com/agentzhao/tricount-cli).
 
-Output is JSON, with a `summary` and a `next` list on every successful command, so an agent can start at `tricount --help` and walk one level at a time. `--human` prints the summary as text. Errors go to stderr.
+Output is JSON, with `ok` and `data` on every successful command. `--help` on each command lists the usual next commands. `--human` prints a one-line summary as text. Errors go to stderr.
 
 A group is identified by the sharing token in `https://tricount.com/tABC123xyz`. Anyone with that token can read and edit the group. The first API call creates device credentials at `~/.config/tricount/credentials.json` (override with `--credentials` or `TRICOUNT_CREDENTIALS`). Amounts are positive major units, such as `12.50` or `1500`, never cents.
 
@@ -58,6 +58,7 @@ tricount
 │   └── list                 Rates from one currency
 ├── reimbursement            Alias: reimburse
 │   └── add                  Record a payment between two members
+├── update                   Replace this binary with a GitHub release (--yes)
 └── version                  Print version, commit, and platform
 ```
 
@@ -104,4 +105,6 @@ tricount expense add --token tABC123xyz --description Dinner --amount 42.50 --pa
 tricount balance show --token tABC123xyz
 ```
 
-`tricount group join --token tABC123xyz` opens an existing share link. Destructive commands (`group delete`, `group leave`, `member delete`, `expense delete`, `attachment remove`, `attachment gallery delete`, `auth reset`) require `--yes` and never prompt.
+`tricount group join --token tABC123xyz` opens an existing share link. Destructive commands (`group delete`, `group leave`, `member delete`, `expense delete`, `attachment remove`, `attachment gallery delete`, `auth reset`, `update`) require `--yes` and never prompt.
+
+`tricount update` installs the latest [GitHub release](https://github.com/agentzhao/tricount-cli/releases) over the binary you are running. `tricount update v0.1.0` installs that tag. A newer release also prints a notice on stderr at most once a day. Set `TRICOUNT_NO_UPDATE_NOTIFIER` to silence it.
