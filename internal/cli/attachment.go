@@ -321,7 +321,7 @@ func changeAttachment(cmd *cobra.Command, add bool) error {
 	if !add {
 		verb = "Removed"
 	}
-	return writeUpdated(cmd, tc, tx.ID, fmt.Sprintf("%s receipt %d on transaction %d in %s.", verb, attachmentID, tx.ID, tc.Title))
+	return writeUpdated(cmd, tc, tx.ID, fmt.Sprintf("%s receipt %d on transaction %d in %s.", verb, attachmentID, tx.ID, tc.Title), nil)
 }
 
 func readUpload(cmd *cobra.Command) ([]byte, string, error) {

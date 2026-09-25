@@ -71,6 +71,25 @@ func TestExpensePayloadIsNegative(t *testing.T) {
 	if payload["type_transaction"] != "NORMAL" {
 		t.Fatalf("type = %v", payload["type_transaction"])
 	}
+	if payload["uuid"] == "" {
+		t.Fatal("payload uuid is empty")
+	}
+	fixed := Entry{
+		Description:   "Dinner",
+		Type:          "NORMAL",
+		PayerUUID:     "payer",
+		GroupCurrency: "EUR",
+		GroupMinor:    100,
+		UUID:          "11111111-1111-4111-8111-111111111111",
+		Allocations:   []Alloc{{UUID: "payer", GroupMinor: 100}},
+	}
+	payload, err = fixed.Payload()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if payload["uuid"] != fixed.UUID {
+		t.Fatalf("payload uuid = %v", payload["uuid"])
+	}
 }
 
 func TestIncomePayloadIsPositive(t *testing.T) {

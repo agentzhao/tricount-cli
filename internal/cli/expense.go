@@ -145,6 +145,9 @@ when --amount is in a different currency than the group. The CLI converts the
 total with --exchange-rate, or looks the rate up when that flag is omitted.
 
 A custom category replaces --category and is stored as OTHER plus the label.
+Pass --idempotency-key to make a repeated run return the existing transaction
+instead of creating another. The key is stored as a deterministic transaction
+UUID, scoped to this group.
 
 Next:
   tricount balance show --help
@@ -177,6 +180,7 @@ var expenseSplitCmd = &cobra.Command{
 Shares are positive major units in the group currency. When --amount is set,
 it must equal the sum of the shares. When --amount is omitted, the total is
 the sum of the shares. --payer is who paid and does not need a share.
+--idempotency-key returns an existing match instead of creating a duplicate.
 
 Next:
   tricount expense add --help
@@ -231,6 +235,7 @@ var expenseRatioCmd = &cobra.Command{
 --ratio Alice=1 --ratio Bob=2 means Bob's share is twice Alice's. Ratios are
 positive integers. The CLI converts them into amounts that sum to --amount.
 Leftover minor units go to the largest fractional remainders.
+--idempotency-key returns an existing match instead of creating a duplicate.
 
 Next:
   tricount expense split --help
@@ -423,7 +428,7 @@ Next:
 		if err := s.client.UpdateEntry(cmdCtx(cmd), tc.ID, tx.ID, payload); err != nil {
 			return err
 		}
-		return writeUpdated(cmd, tc, tx.ID, fmt.Sprintf("Updated transaction %d in %s.", tx.ID, tc.Title))
+		return writeUpdated(cmd, tc, tx.ID, fmt.Sprintf("Updated transaction %d in %s.", tx.ID, tc.Title), nil)
 	},
 }
 
@@ -625,6 +630,29 @@ func equalExpenseEntry(cmd *cobra.Command, tc tricount.Tricount, draft expenseDr
 }
 
 func createEntry(cmd *cobra.Command, tc tricount.Tricount, entry tricount.Entry, summary string) error {
+	key, err := idempotencyKey(cmd)
+	if err != nil {
+		return err
+	}
+	var extra map[string]any
+	if key != "" {
+		scope, err := idempotencyScope(tc)
+		if err != nil {
+			return err
+		}
+		id, err := tricount.IdempotencyUUID(scope, key)
+		if err != nil {
+			return err
+		}
+		entry.UUID = id
+		if existing, ok := transactionByUUID(tc, id); ok {
+			if reason := idempotencyMismatch(existing, entry); reason != "" {
+				return fmt.Errorf("idempotency key %q already belongs to transaction %d in %s, and this request does not match its %s", key, existing.ID, tc.Title, reason)
+			}
+			return writeIdempotent(cmd, tc, existing, key)
+		}
+		extra = map[string]any{"created": true, "idempotency_key": key}
+	}
 	payload, err := entry.Payload()
 	if err != nil {
 		return err
@@ -638,11 +666,14 @@ func createEntry(cmd *cobra.Command, tc tricount.Tricount, entry tricount.Entry,
 		return err
 	}
 	summary = fmt.Sprintf("%s Transaction id %d.", summary, id)
-	return writeUpdated(cmd, tc, id, summary)
+	return writeUpdated(cmd, tc, id, summary, extra)
 }
 
-func writeUpdated(cmd *cobra.Command, tc tricount.Tricount, id int, summary string) error {
+func writeUpdated(cmd *cobra.Command, tc tricount.Tricount, id int, summary string, extra map[string]any) error {
 	data := map[string]any{"id": id}
+	for k, v := range extra {
+		data[k] = v
+	}
 	human := ""
 	updated, err := reloadGroup(cmd, tc)
 	if err == nil {
@@ -706,12 +737,15 @@ func init() {
 	bindExpenseFields(expenseAddCmd, true)
 	expenseAddCmd.Flags().String("currency", "", flagCurrencyHelp)
 	expenseAddCmd.Flags().String("exchange-rate", "", flagRateHelp)
+	bindIdempotency(expenseAddCmd)
 	bindExpenseFields(expenseSplitCmd, false)
 	expenseSplitCmd.Flags().StringSlice("share", nil, flagShareHelp)
+	bindIdempotency(expenseSplitCmd)
 	bindExpenseFields(expenseRatioCmd, false)
 	expenseRatioCmd.Flags().String("currency", "", flagCurrencyHelp)
 	expenseRatioCmd.Flags().String("exchange-rate", "", flagRateHelp)
 	expenseRatioCmd.Flags().StringSlice("ratio", nil, flagRatioHelp)
+	bindIdempotency(expenseRatioCmd)
 	bindExpenseFields(expenseEditCmd, true)
 	expenseEditCmd.Flags().String("transaction", "", flagTxHelp)
 	expenseDeleteCmd.Flags().String("transaction", "", flagTxHelp)

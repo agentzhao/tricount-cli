@@ -37,7 +37,8 @@ var reimbursementAddCmd = &cobra.Command{
 
 --amount is a positive major-unit value in the group currency.
 --description defaults to Reimbursement. The payer and receiver must be
-different members.
+different members. --idempotency-key returns an existing match instead of
+creating a duplicate.
 
 Next:
   tricount balance show --help
@@ -98,6 +99,7 @@ func init() {
 	reimbursementAddCmd.Flags().String("amount", "", flagAmountHelp)
 	reimbursementAddCmd.Flags().String("description", "", "Label for the payment. Default: Reimbursement.")
 	reimbursementAddCmd.Flags().String("date", "", flagDateHelp)
+	bindIdempotency(reimbursementAddCmd)
 	reimbursementCmd.AddCommand(reimbursementAddCmd)
 	rootCmd.AddCommand(reimbursementCmd)
 }

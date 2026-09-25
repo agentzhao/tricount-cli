@@ -32,6 +32,9 @@ type Entry struct {
 	Category       string
 	CategoryCustom string
 	AttachmentIDs  []int
+	// UUID is the client id sent to the API. Empty generates a random id.
+	// Idempotent creates set a deterministic id derived from the group and key.
+	UUID string
 }
 
 // Payload builds the registry-entry JSON body.
@@ -60,9 +63,13 @@ func (e Entry) Payload() (map[string]any, error) {
 	if when.IsZero() {
 		when = time.Now()
 	}
-	id, err := NewUUID()
-	if err != nil {
-		return nil, err
+	id := e.UUID
+	if id == "" {
+		var err error
+		id, err = NewUUID()
+		if err != nil {
+			return nil, err
+		}
 	}
 	allocs := make([]any, 0, len(e.Allocations))
 	for _, a := range e.Allocations {

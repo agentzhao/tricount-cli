@@ -35,12 +35,14 @@ var incomeAddCmd = &cobra.Command{
 
 --amount is a positive major-unit total. --receiver is who received it.
 --among are the members credited with an equal share. The receiver does not
-have to be in --among.
+have to be in --among. --idempotency-key returns an existing match instead
+of creating a duplicate.
 
 Next:
   tricount balance show --help
   tricount expense list --help`,
-	Example: `  tricount income add --token tABC123xyz --description "Tax refund" --amount 30 --receiver Alice --among Alice,Bob`,
+	Example: `  tricount income add --token tABC123xyz --description "Tax refund" --amount 30 --receiver Alice --among Alice,Bob
+  tricount income add --token tABC123xyz --description "Fun money" --amount 20 --receiver Alice --among Alice,Bob --idempotency-key fun-money:2026-10`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		tc, err := prepareExpenseGroup(cmd)
 		if err != nil {
@@ -112,6 +114,7 @@ func init() {
 	incomeAddCmd.Flags().String("category-custom", "", flagCategoryCustomHelp)
 	incomeAddCmd.Flags().String("date", "", flagDateHelp)
 	incomeAddCmd.Flags().IntSlice("attachment", nil, flagAttachmentHelp)
+	bindIdempotency(incomeAddCmd)
 	incomeCmd.AddCommand(incomeAddCmd)
 	rootCmd.AddCommand(incomeCmd)
 }

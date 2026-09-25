@@ -107,4 +107,10 @@ tricount balance show --token tABC123xyz
 
 `tricount group join --token tABC123xyz` opens an existing share link. Destructive commands (`group delete`, `group leave`, `member delete`, `expense delete`, `attachment remove`, `attachment gallery delete`, `auth reset`, `update`) require `--yes` and never prompt.
 
+`expense add`, `expense split`, `expense ratio`, `income add`, and `reimbursement add` accept `--idempotency-key`. The key is scoped to the group and stored as a deterministic transaction UUID. A later run with the same key prints the existing transaction when the description, amount, payer, and allocations still match, and fails when they do not.
+
+```bash
+tricount income add --token tABC123xyz --description "Fun money" --amount 20 --receiver Alice --among Alice,Bob --idempotency-key fun-money:2026-10
+```
+
 `tricount update` installs the latest [GitHub release](https://github.com/agentzhao/tricount-cli/releases) over the binary you are running. `tricount update v0.1.0` installs that tag. A newer release also prints a notice on stderr at most once a day. Set `TRICOUNT_NO_UPDATE_NOTIFIER` to silence it.
