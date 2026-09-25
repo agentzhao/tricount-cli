@@ -45,14 +45,14 @@ func normalizeCurrency(s string) (string, error) {
 
 func positiveAmount(cmd *cobra.Command) (int64, error) {
 	if !cmd.Flags().Changed("amount") {
-		return 0, fmt.Errorf("pass --amount as a positive decimal in major units, such as 12.50 or 1500. Do not pass cents")
+		return 0, coded("missing_amount", "pass --amount as a positive decimal in major units, such as 12.50 or 1500", "Do not pass cents.")
 	}
 	minor, err := tricount.ParseMajorExact(flagString(cmd, "amount"))
 	if err != nil {
-		return 0, err
+		return 0, coded("invalid_amount", err.Error(), "")
 	}
 	if minor <= 0 {
-		return 0, fmt.Errorf("--amount must be greater than zero in major units, such as 12.50 or 1500")
+		return 0, coded("invalid_amount", "--amount must be greater than zero in major units, such as 12.50 or 1500", "")
 	}
 	return minor, nil
 }

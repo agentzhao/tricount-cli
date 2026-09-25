@@ -66,5 +66,5 @@ func confirm(action string) error {
 	if assumeYes {
 		return nil
 	}
-	return fmt.Errorf("%s. Re-run the same command with --yes. The CLI does not prompt", action)
+	return coded("confirmation_required", action, "Re-run the same command with --yes. The CLI does not prompt.")
 }

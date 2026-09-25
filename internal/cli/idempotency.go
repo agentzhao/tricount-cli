@@ -20,14 +20,14 @@ func idempotencyKey(cmd *cobra.Command) (string, error) {
 	}
 	key := strings.TrimSpace(flag.Value.String())
 	if key == "" {
-		return "", fmt.Errorf("--idempotency-key is empty. Example: --idempotency-key fun-money:2026-10")
+		return "", coded("invalid_idempotency_key", "--idempotency-key is empty", "Example: --idempotency-key fun-money:2026-10")
 	}
 	if len(key) > 200 {
-		return "", fmt.Errorf("--idempotency-key is longer than 200 characters")
+		return "", coded("invalid_idempotency_key", "--idempotency-key is longer than 200 characters", "")
 	}
 	for _, r := range key {
 		if unicode.IsControl(r) {
-			return "", fmt.Errorf("--idempotency-key cannot contain control characters")
+			return "", coded("invalid_idempotency_key", "--idempotency-key cannot contain control characters", "")
 		}
 	}
 	return key, nil

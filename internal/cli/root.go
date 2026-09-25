@@ -18,6 +18,7 @@ import (
 var (
 	credentialsPath string
 	humanOutput     bool
+	jsonErrors      bool
 	assumeYes       bool
 	activeSession   *session
 	notifyWg        sync.WaitGroup
@@ -117,7 +118,9 @@ Credentials:
 
 Output:
   JSON on stdout: ok and data.
-  Add --human for a short text summary. Errors go to stderr.
+  Add --human for a short text summary.
+  Errors go to stderr. Add --json-errors for
+  {"ok":false,"error":{"code","message","hint"}}.
   Destructive commands never prompt. Pass --yes to confirm them.
 
 Amounts:
@@ -166,10 +169,14 @@ func Execute() error {
 	defer stop()
 	cmd, err := rootCmd.ExecuteContextC(ctx)
 	notifyWg.Wait()
-	if noticeOutput != "" {
+	if noticeOutput != "" && !(jsonErrors && err != nil) {
 		fmt.Fprint(os.Stderr, noticeOutput)
 	}
 	if err != nil {
+		if jsonErrors {
+			_ = writeErrorJSON(os.Stderr, err)
+			return err
+		}
 		if isCommandLineError(err) {
 			if cmd == nil {
 				cmd = rootCmd
@@ -236,5 +243,6 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&credentialsPath, "credentials", "", "Credentials file. Default: ~/.config/tricount/credentials.json, or $TRICOUNT_CREDENTIALS. --credentials wins over the environment variable.")
 	rootCmd.PersistentFlags().BoolVar(&humanOutput, "human", false, "Print a short text summary instead of JSON.")
+	rootCmd.PersistentFlags().BoolVar(&jsonErrors, "json-errors", false, "Write failures as JSON on stderr: {\"ok\":false,\"error\":{\"code\",\"message\",\"hint\"}}.")
 	rootCmd.PersistentFlags().BoolVarP(&assumeYes, "yes", "y", false, "Confirm a destructive command. The CLI does not prompt, so delete, leave, reset, and update require --yes.")
 }

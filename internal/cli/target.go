@@ -48,7 +48,7 @@ func targetFlags(cmd *cobra.Command) (string, int, error) {
 	}
 	token = tricount.NormalizeToken(token)
 	if token == "" && id == 0 {
-		return "", 0, fmt.Errorf("pass --token or --id. --token is the id in https://tricount.com/<token>. Synced ids come from: tricount group list")
+		return "", 0, coded("missing_target", "pass --token or --id", "--token is the id in https://tricount.com/<token>. Synced ids come from: tricount group list")
 	}
 	return token, id, nil
 }
@@ -107,13 +107,13 @@ func rejectArchived(tc tricount.Tricount) error {
 	if !tc.Archived() {
 		return nil
 	}
-	return fmt.Errorf("group %q is archived and read-only. Unarchive it with: tricount group unarchive --token %s", tc.Title, shellArg(tc.Token))
+	return coded("group_archived", fmt.Sprintf("group %q is archived and read-only", tc.Title), fmt.Sprintf("Unarchive it with: tricount group unarchive --token %s", shellArg(tc.Token)))
 }
 
 func resolveMember(tc tricount.Tricount, ref string) (tricount.Member, error) {
 	ref = strings.TrimSpace(ref)
 	if ref == "" {
-		return tricount.Member{}, fmt.Errorf("pass a member display name or membership uuid. %s", memberHint(tc))
+		return tricount.Member{}, coded("missing_member", "pass a member display name or membership uuid", memberHint(tc))
 	}
 	var byUUID, byName []tricount.Member
 	for _, m := range tc.Members {
@@ -131,9 +131,9 @@ func resolveMember(tc tricount.Tricount, ref string) (tricount.Member, error) {
 		return byName[0], nil
 	}
 	if len(byName) > 1 {
-		return tricount.Member{}, fmt.Errorf("%d members are named %q. Pass a membership uuid. %s", len(byName), ref, memberHint(tc))
+		return tricount.Member{}, coded("ambiguous_member", fmt.Sprintf("%d members are named %q", len(byName), ref), "Pass a membership uuid. "+memberHint(tc))
 	}
-	return tricount.Member{}, fmt.Errorf("no member %q. %s", ref, memberHint(tc))
+	return tricount.Member{}, coded("member_not_found", fmt.Sprintf("no member %q", ref), memberHint(tc))
 }
 
 func resolveMembers(tc tricount.Tricount, refs []string) ([]tricount.Member, error) {
@@ -165,7 +165,7 @@ func memberHint(tc tricount.Tricount) string {
 func findTransaction(tc tricount.Tricount, ref string) (tricount.Transaction, error) {
 	ref = strings.TrimSpace(ref)
 	if ref == "" {
-		return tricount.Transaction{}, fmt.Errorf("pass --transaction with the numeric id from: tricount expense list --token %s", shellArg(tc.Token))
+		return tricount.Transaction{}, coded("missing_transaction", "pass --transaction with the numeric id from expense list", fmt.Sprintf("List them with: tricount expense list --token %s", shellArg(tc.Token)))
 	}
 	if id, err := strconv.Atoi(ref); err == nil {
 		for _, tx := range tc.Transactions {
@@ -179,7 +179,7 @@ func findTransaction(tc tricount.Tricount, ref string) (tricount.Transaction, er
 			return tx, nil
 		}
 	}
-	return tricount.Transaction{}, fmt.Errorf("no transaction %q in %q. List them with: tricount expense list --token %s", ref, tc.Title, shellArg(tc.Token))
+	return tricount.Transaction{}, coded("transaction_not_found", fmt.Sprintf("no transaction %q in %q", ref, tc.Title), fmt.Sprintf("List them with: tricount expense list --token %s", shellArg(tc.Token)))
 }
 
 func namesOf(members []tricount.Member) string {

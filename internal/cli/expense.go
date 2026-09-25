@@ -647,7 +647,7 @@ func createEntry(cmd *cobra.Command, tc tricount.Tricount, entry tricount.Entry,
 		entry.UUID = id
 		if existing, ok := transactionByUUID(tc, id); ok {
 			if reason := idempotencyMismatch(existing, entry); reason != "" {
-				return fmt.Errorf("idempotency key %q already belongs to transaction %d in %s, and this request does not match its %s", key, existing.ID, tc.Title, reason)
+				return coded("idempotency_conflict", fmt.Sprintf("idempotency key %q already belongs to transaction %d in %s, and this request does not match its %s", key, existing.ID, tc.Title, reason), "Use a new key, or repeat the original description, amount, payer, and allocations.")
 			}
 			return writeIdempotent(cmd, tc, existing, key)
 		}

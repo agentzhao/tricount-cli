@@ -2,7 +2,13 @@
 
 Command-line client for [Tricount](https://tricount.com) expense groups. It speaks the same unofficial registry API as [tricount-api](https://pypi.org/project/tricount-api/). The module lives at [github.com/agentzhao/tricount-cli](https://github.com/agentzhao/tricount-cli).
 
-Output is JSON, with `ok` and `data` on every successful command. `--help` on each command lists the usual next commands. `--human` prints a one-line summary as text. Errors go to stderr.
+Output is JSON, with `ok` and `data` on every successful command. `--help` on each command lists the usual next commands. `--human` prints a one-line summary as text. Errors go to stderr. `--json-errors` writes them as JSON on stderr:
+
+```json
+{"ok":false,"error":{"code":"member_not_found","message":"no member \"Cara\"","hint":"List them with: tricount member list"}}
+```
+
+Stable codes include `usage`, `missing_target`, `missing_amount`, `invalid_amount`, `invalid_exchange_rate`, `member_not_found`, `ambiguous_member`, `missing_member`, `transaction_not_found`, `confirmation_required`, `group_archived`, `idempotency_conflict`, `invalid_idempotency_key`, `api_error`, and `error`.
 
 A group is identified by the sharing token in `https://tricount.com/tABC123xyz`. Anyone with that token can read and edit the group. The first API call creates device credentials at `~/.config/tricount/credentials.json` (override with `--credentials` or `TRICOUNT_CREDENTIALS`). Amounts are positive exact decimals in major units, such as `12.50` or `1500`, never cents. More than two decimal places (`1.005`) is rejected. Exchange rates are exact decimals too.
 
@@ -62,7 +68,7 @@ tricount
 └── version                  Print version, commit, and platform
 ```
 
-Global flags: `--credentials`, `--human`, `--yes`, `-h` / `--help`, `--version`.
+Global flags: `--credentials`, `--human`, `--json-errors`, `--yes`, `-h` / `--help`, `--version`.
 
 ## Setup
 
