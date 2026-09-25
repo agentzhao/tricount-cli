@@ -34,6 +34,7 @@ Subcommands:
   split   Exact amounts per member
   ratio   Relative integer shares
   edit    Change description, amount, payer, split, category, or date
+  ensure  Create a keyed expense, income, or reimbursement once
   delete  Remove a transaction
 
 Also: tricount transaction ... and tricount tx ...
@@ -728,7 +729,7 @@ func sumInts(vals []int) int {
 }
 
 func init() {
-	for _, cmd := range []*cobra.Command{expenseListCmd, expenseGetCmd, expenseAddCmd, expenseSplitCmd, expenseRatioCmd, expenseEditCmd, expenseDeleteCmd} {
+	for _, cmd := range []*cobra.Command{expenseListCmd, expenseGetCmd, expenseAddCmd, expenseSplitCmd, expenseRatioCmd, expenseEnsureCmd, expenseEditCmd, expenseDeleteCmd} {
 		bindTarget(cmd)
 	}
 	expenseGetCmd.Flags().String("transaction", "", flagTxHelp)
@@ -754,6 +755,6 @@ func init() {
 	bindExpenseFields(expenseEditCmd, true)
 	expenseEditCmd.Flags().String("transaction", "", flagTxHelp)
 	expenseDeleteCmd.Flags().String("transaction", "", flagTxHelp)
-	expenseCmd.AddCommand(expenseListCmd, expenseGetCmd, expenseAddCmd, expenseSplitCmd, expenseRatioCmd, expenseEditCmd, expenseDeleteCmd)
+	expenseCmd.AddCommand(expenseListCmd, expenseGetCmd, expenseAddCmd, expenseSplitCmd, expenseRatioCmd, expenseEnsureCmd, expenseEditCmd, expenseDeleteCmd)
 	rootCmd.AddCommand(expenseCmd)
 }

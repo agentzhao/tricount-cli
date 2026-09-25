@@ -8,7 +8,7 @@ Output is JSON, with `ok` and `data` on every successful command. `--help` on ea
 {"ok":false,"error":{"code":"member_not_found","message":"no member \"Cara\"","hint":"List them with: tricount member list"}}
 ```
 
-Stable codes include `usage`, `missing_target`, `invalid_target`, `missing_amount`, `invalid_amount`, `invalid_exchange_rate`, `invalid_filter`, `member_not_found`, `ambiguous_member`, `missing_member`, `transaction_not_found`, `confirmation_required`, `group_archived`, `idempotency_conflict`, `invalid_idempotency_key`, `unknown_profile`, `config_error`, `api_error`, and `error`.
+Stable codes include `usage`, `missing_target`, `invalid_target`, `missing_amount`, `invalid_amount`, `invalid_exchange_rate`, `invalid_filter`, `invalid_request`, `member_not_found`, `ambiguous_member`, `missing_member`, `transaction_not_found`, `confirmation_required`, `group_archived`, `idempotency_conflict`, `idempotency_ambiguous`, `invalid_idempotency_key`, `verification_failed`, `unknown_profile`, `config_error`, `api_error`, and `error`.
 
 A group is identified by the sharing token in `https://tricount.com/tABC123xyz`. Anyone with that token can read and edit the group. The first API call creates device credentials at `~/.config/tricount/credentials.json` (override with `--credentials` or `TRICOUNT_CREDENTIALS`). Amounts are positive exact decimals in major units, such as `12.50` or `1500`, never cents. More than two decimal places (`1.005`) is rejected. Exchange rates are exact decimals too.
 
@@ -36,6 +36,7 @@ tricount
 │   ├── add                  Equal split
 │   ├── delete               Delete a transaction (--yes)
 │   ├── edit                 Edit any transaction
+│   ├── ensure               Create a keyed transaction once
 │   ├── get                  Read one transaction
 │   ├── list                 List transactions (--since --until --type --member --limit --format)
 │   ├── ratio                Split by integer ratios
@@ -114,7 +115,11 @@ tricount balance show --token tABC123xyz
 
 `tricount group join --token tABC123xyz` opens an existing share link. Destructive commands (`group delete`, `group leave`, `member delete`, `expense delete`, `attachment remove`, `attachment gallery delete`, `auth reset`, `update`) require `--yes` and never prompt.
 
-`expense add`, `expense split`, `expense ratio`, `income add`, and `reimbursement add` accept `--idempotency-key`. The key is scoped to the group and stored as a deterministic transaction UUID. A later run with the same key prints the existing transaction when the description, amount, payer, and allocations still match, and fails when they do not.
+`transaction ensure` creates an expense, income, or reimbursement once for a caller-supplied `--key`. The key is appended to the description as `[tricount-cli:key=...]`, so any later run can find it. An exact repeat returns `status: "existing"`. A different payload for the same key fails with `idempotency_conflict` and does not write. `--dry-run` does not write either. `expense add` and the other create commands still accept `--idempotency-key`, which stores a deterministic transaction UUID instead of a description suffix.
+
+```bash
+tricount transaction ensure --token tABC123xyz --key rent:2026-10 --type expense --description "October rent" --amount 900 --payer Alice --among Alice,Bob
+```
 
 ```bash
 tricount income add --token tABC123xyz --description "Fun money" --amount 20 --receiver Alice --among Alice,Bob --idempotency-key fun-money:2026-10

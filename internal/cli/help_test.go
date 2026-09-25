@@ -27,6 +27,24 @@ func TestCommandsDocumentNextSteps(t *testing.T) {
 	}
 }
 
+func TestEnsureAliases(t *testing.T) {
+	for _, args := range [][]string{
+		{"expense", "ensure"},
+		{"transaction", "ensure"},
+		{"tx", "ensure"},
+	} {
+		cmd, _, err := rootCmd.Find(args)
+		if err != nil || cmd.Name() != "ensure" {
+			t.Fatalf("Find(%v) = %s %v", args, cmd.Name(), err)
+		}
+	}
+	for _, name := range []string{"key", "type", "dry-run", "description", "amount", "payer", "receiver", "among", "share", "ratio", "token", "group"} {
+		if expenseEnsureCmd.Flags().Lookup(name) == nil {
+			t.Errorf("ensure is missing --%s", name)
+		}
+	}
+}
+
 func TestIsCommandLineError(t *testing.T) {
 	if !isCommandLineError(errors.New("unknown command \"nope\" for \"tricount\"")) {
 		t.Fatal("expected unknown command to print usage")

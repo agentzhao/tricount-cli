@@ -11,9 +11,11 @@ import (
 
 // Error is a failure with a stable code for --json-errors.
 type Error struct {
-	Code    string
-	Message string
-	Hint    string
+	Code          string
+	Message       string
+	Hint          string
+	TransactionID int
+	Differences   []string
 }
 
 func (e *Error) Error() string {
@@ -77,14 +79,23 @@ func writeErrorJSON(w io.Writer, err error) error {
 	doc := struct {
 		OK    bool `json:"ok"`
 		Error struct {
-			Code    string `json:"code"`
-			Message string `json:"message"`
-			Hint    string `json:"hint,omitempty"`
+			Code          string   `json:"code"`
+			Message       string   `json:"message"`
+			Hint          string   `json:"hint,omitempty"`
+			TransactionID int      `json:"transaction_id,omitempty"`
+			Differences   []string `json:"differences,omitempty"`
 		} `json:"error"`
 	}{OK: false}
 	doc.Error.Code = code
 	doc.Error.Message = message
 	doc.Error.Hint = hint
+	var detail *Error
+	if errors.As(err, &detail) && detail != nil {
+		doc.Error.TransactionID = detail.TransactionID
+		if len(detail.Differences) > 0 {
+			doc.Error.Differences = append([]string(nil), detail.Differences...)
+		}
+	}
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	enc.SetEscapeHTML(false)
