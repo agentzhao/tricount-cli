@@ -49,11 +49,17 @@ Next:
 		if err != nil {
 			return err
 		}
-		payer, err := resolveMember(tc, flagString(cmd, "payer"))
+		payerName := flagString(cmd, "payer")
+		receiverName := flagString(cmd, "receiver")
+		if profile, ok := profileValue(cmd); ok {
+			payerName = defaultedFlag(cmd, "payer", profile.Payer)
+			receiverName = defaultedFlag(cmd, "receiver", profile.Receiver)
+		}
+		payer, err := resolveMember(tc, payerName)
 		if err != nil {
 			return err
 		}
-		receiver, err := resolveMember(tc, flagString(cmd, "receiver"))
+		receiver, err := resolveMember(tc, receiverName)
 		if err != nil {
 			return err
 		}

@@ -34,21 +34,51 @@ const (
 
 func bindTarget(cmd *cobra.Command) {
 	cmd.Flags().String("token", "", tokenHelp)
+	cmd.Flags().String("group", "", flagGroupHelp)
 	cmd.Flags().Int("id", 0, idHelp)
 }
 
 func targetFlags(cmd *cobra.Command) (string, int, error) {
-	token, err := cmd.Flags().GetString("token")
-	if err != nil {
-		return "", 0, err
+	token := ""
+	var err error
+	if cmd.Flags().Lookup("token") != nil {
+		token, err = cmd.Flags().GetString("token")
+		if err != nil {
+			return "", 0, err
+		}
 	}
-	id, err := cmd.Flags().GetInt("id")
-	if err != nil {
-		return "", 0, err
+	id := 0
+	if cmd.Flags().Lookup("id") != nil {
+		id, err = cmd.Flags().GetInt("id")
+		if err != nil {
+			return "", 0, err
+		}
+	}
+	groupName := ""
+	if cmd.Flags().Lookup("group") != nil {
+		groupName = flagString(cmd, "group")
+	}
+	activeProfile = nil
+	if groupName != "" && strings.TrimSpace(token) != "" {
+		return "", 0, coded("invalid_target", "pass --token or --group, not both", "")
+	}
+	if groupName != "" && id != 0 {
+		return "", 0, coded("invalid_target", "pass --id or --group, not both", "")
+	}
+	if groupName != "" {
+		profile, err := requireProfile(groupName)
+		if err != nil {
+			return "", 0, err
+		}
+		token, err = profile.sharingToken()
+		if err != nil {
+			return "", 0, err
+		}
+		activeProfile = &profile
 	}
 	token = tricount.NormalizeToken(token)
 	if token == "" && id == 0 {
-		return "", 0, coded("missing_target", "pass --token or --id", "--token is the id in https://tricount.com/<token>. Synced ids come from: tricount group list")
+		return "", 0, coded("missing_target", "pass --token, --group, or --id", "--token is the id in https://tricount.com/<token>. --group is a name from: tricount group profiles. Synced ids come from: tricount group list")
 	}
 	return token, id, nil
 }

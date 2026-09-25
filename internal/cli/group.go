@@ -17,8 +17,10 @@ var groupCmd = &cobra.Command{
 	Short:   "Expense groups, also called tricounts",
 	Long: `A group is one Tricount expense list.
 
-Identify it with --token, the id in the share link:
+Identify it with --token, the id in the share link, or --group, a name
+from the local config file:
   https://tricount.com/tABC123xyz  ->  --token tABC123xyz
+  [groups.fun] in ~/.config/tricount/config.toml  ->  --group fun
 A full URL is accepted. The CLI keeps the last path segment.
 
 Anyone with the token can read and change the group. Writes such as
@@ -35,6 +37,7 @@ Subcommands:
   leave      Remove a group from this device
   delete     Permanently delete a group this device created
   sync       Fetch several share tokens in one request
+  profiles   Named groups from the local config file
 
 Currency and description are stored when the group is created.
 
@@ -131,17 +134,22 @@ var groupJoinCmd = &cobra.Command{
 	Args:  cobra.NoArgs,
 	Long: `Sync a group onto this device so it shows up in group list.
 
-The token is enough. This device does not need to be a member. Joining
-links the device to the first member inside the Tricount app. You can still
+The token is enough. This device does not need to be a member. Pass
+--group to read the token from the local config instead of the command line.
+Joining links the device to the first member inside the Tricount app. You can still
 record expenses as any member. Change the link with tricount member link.
 
 Next:
   tricount member list --help
   tricount expense add --help`,
 	Example: `  tricount group join --token tABC123xyz
-  tricount group join --token https://tricount.com/tABC123xyz`,
+  tricount group join --token https://tricount.com/tABC123xyz
+  tricount group join --group fun`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		token := tricount.NormalizeToken(flagString(cmd, "token"))
+		token, _, err := targetFlags(cmd)
+		if err != nil {
+			return err
+		}
 		s, err := loadSession(cmdCtx(cmd))
 		if err != nil {
 			return err
@@ -474,9 +482,7 @@ func reloadGroup(cmd *cobra.Command, tc tricount.Tricount) (tricount.Tricount, e
 func init() {
 	bindTarget(groupGetCmd)
 	groupJoinCmd.Flags().String("token", "", tokenHelp)
-	if err := groupJoinCmd.MarkFlagRequired("token"); err != nil {
-		panic(err)
-	}
+	groupJoinCmd.Flags().String("group", "", flagGroupHelp)
 	groupCreateCmd.Flags().String("title", "", "Name people see for this group.")
 	groupCreateCmd.Flags().String("currency", "", "3-letter ISO currency stored at creation, such as EUR, USD, or JPY.")
 	groupCreateCmd.Flags().String("description", "", "Description stored at creation. Later updates do not change it.")
@@ -497,6 +503,6 @@ func init() {
 	groupSyncCmd.Flags().StringSlice("active", nil, "Share token to sync as active. Repeat or comma-separate.")
 	groupSyncCmd.Flags().StringSlice("archived", nil, "Share token to sync as archived. Repeat or comma-separate.")
 
-	groupCmd.AddCommand(groupListCmd, groupGetCmd, groupJoinCmd, groupCreateCmd, groupUpdateCmd, groupArchiveCmd, groupUnarchiveCmd, groupLeaveCmd, groupDeleteCmd, groupSyncCmd)
+	groupCmd.AddCommand(groupListCmd, groupGetCmd, groupJoinCmd, groupCreateCmd, groupUpdateCmd, groupArchiveCmd, groupUnarchiveCmd, groupLeaveCmd, groupDeleteCmd, groupSyncCmd, groupProfilesCmd)
 	rootCmd.AddCommand(groupCmd)
 }

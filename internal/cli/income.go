@@ -52,7 +52,11 @@ Next:
 		if desc == "" {
 			return fmt.Errorf("pass --description, a short label such as Refund")
 		}
-		receiver, err := resolveMember(tc, flagString(cmd, "receiver"))
+		receiverName := flagString(cmd, "receiver")
+		if profile, ok := profileValue(cmd); ok {
+			receiverName = defaultedFlag(cmd, "receiver", profile.Receiver)
+		}
+		receiver, err := resolveMember(tc, receiverName)
 		if err != nil {
 			return err
 		}
@@ -64,6 +68,7 @@ Next:
 		if err != nil {
 			return err
 		}
+		refs = defaultedAmong(cmd, refs)
 		members, err := resolveMembers(tc, refs)
 		if err != nil {
 			return err

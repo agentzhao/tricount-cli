@@ -116,6 +116,11 @@ Credentials:
   Override with --credentials or TRICOUNT_CREDENTIALS.
   See: tricount auth --help
 
+Config:
+  ~/.config/tricount/config.toml maps a short name to a token environment
+  variable. Use --group fun instead of putting the token in a script.
+  See: tricount group profiles --help
+
 Output:
   JSON on stdout: ok and data.
   Add --human for a short text summary.
@@ -242,6 +247,7 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 
 	rootCmd.PersistentFlags().StringVar(&credentialsPath, "credentials", "", "Credentials file. Default: ~/.config/tricount/credentials.json, or $TRICOUNT_CREDENTIALS. --credentials wins over the environment variable.")
+	rootCmd.PersistentFlags().StringVar(&configPath, "config", "", "Group profile file. Default: ~/.config/tricount/config.toml, or $TRICOUNT_CONFIG. --config wins over the environment variable.")
 	rootCmd.PersistentFlags().BoolVar(&humanOutput, "human", false, "Print a short text summary instead of JSON.")
 	rootCmd.PersistentFlags().BoolVar(&jsonErrors, "json-errors", false, "Write failures as JSON on stderr: {\"ok\":false,\"error\":{\"code\",\"message\",\"hint\"}}.")
 	rootCmd.PersistentFlags().BoolVarP(&assumeYes, "yes", "y", false, "Confirm a destructive command. The CLI does not prompt, so delete, leave, reset, and update require --yes.")

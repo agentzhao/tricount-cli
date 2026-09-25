@@ -8,7 +8,7 @@ Output is JSON, with `ok` and `data` on every successful command. `--help` on ea
 {"ok":false,"error":{"code":"member_not_found","message":"no member \"Cara\"","hint":"List them with: tricount member list"}}
 ```
 
-Stable codes include `usage`, `missing_target`, `missing_amount`, `invalid_amount`, `invalid_exchange_rate`, `invalid_filter`, `member_not_found`, `ambiguous_member`, `missing_member`, `transaction_not_found`, `confirmation_required`, `group_archived`, `idempotency_conflict`, `invalid_idempotency_key`, `api_error`, and `error`.
+Stable codes include `usage`, `missing_target`, `invalid_target`, `missing_amount`, `invalid_amount`, `invalid_exchange_rate`, `invalid_filter`, `member_not_found`, `ambiguous_member`, `missing_member`, `transaction_not_found`, `confirmation_required`, `group_archived`, `idempotency_conflict`, `invalid_idempotency_key`, `unknown_profile`, `config_error`, `api_error`, and `error`.
 
 A group is identified by the sharing token in `https://tricount.com/tABC123xyz`. Anyone with that token can read and edit the group. The first API call creates device credentials at `~/.config/tricount/credentials.json` (override with `--credentials` or `TRICOUNT_CREDENTIALS`). Amounts are positive exact decimals in major units, such as `12.50` or `1500`, never cents. More than two decimal places (`1.005`) is rejected. Exchange rates are exact decimals too.
 
@@ -48,6 +48,7 @@ tricount
 │   ├── join                 Sync a share link onto this device
 │   ├── leave                Remove a group from this device (--yes)
 │   ├── list                 Groups already synced here
+│   ├── profiles             Named groups from the local config
 │   ├── sync                 Fetch several tokens at once
 │   ├── unarchive            Make an archived group editable
 │   └── update               Change title, emoji, or category
@@ -68,7 +69,7 @@ tricount
 └── version                  Print version, commit, and platform
 ```
 
-Global flags: `--credentials`, `--human`, `--json-errors`, `--yes`, `-h` / `--help`, `--version`.
+Global flags: `--credentials`, `--config`, `--human`, `--json-errors`, `--yes`, `-h` / `--help`, `--version`.
 
 ## Setup
 
@@ -117,6 +118,20 @@ tricount balance show --token tABC123xyz
 
 ```bash
 tricount income add --token tABC123xyz --description "Fun money" --amount 20 --receiver Alice --among Alice,Bob --idempotency-key fun-money:2026-10
+```
+
+Named groups live in `~/.config/tricount/config.toml` (`--config` or `TRICOUNT_CONFIG`). `token_env` names an environment variable so the share token is not written into shell scripts. `payer`, `receiver`, and `among` fill those flags when you pass `--group` and omit them. `--token` still works on its own.
+
+```toml
+[groups.fun]
+token_env = "TRICOUNT_FUN_TOKEN"
+payer = "Alice"
+among = ["Alice", "Bob"]
+```
+
+```bash
+tricount group profiles
+tricount expense add --group fun --description Dinner --amount 12.50
 ```
 
 `tricount update` installs the latest [GitHub release](https://github.com/agentzhao/tricount-cli/releases) over the binary you are running. `tricount update v0.1.0` installs that tag. A newer release also prints a notice on stderr at most once a day. Set `TRICOUNT_NO_UPDATE_NOTIFIER` to silence it.

@@ -525,7 +525,11 @@ func readExpenseDraft(cmd *cobra.Command, tc tricount.Tricount, requireAmount bo
 	if desc == "" {
 		return expenseDraft{}, fmt.Errorf("pass --description, a short label such as Dinner")
 	}
-	payer, err := resolveMember(tc, flagString(cmd, "payer"))
+	fallback := ""
+	if profile, ok := profileValue(cmd); ok {
+		fallback = profile.Payer
+	}
+	payer, err := resolveMember(tc, defaultedFlag(cmd, "payer", fallback))
 	if err != nil {
 		return expenseDraft{}, err
 	}
@@ -606,6 +610,7 @@ func equalExpenseEntry(cmd *cobra.Command, tc tricount.Tricount, draft expenseDr
 	if err != nil {
 		return tricount.Entry{}, "", err
 	}
+	refs = defaultedAmong(cmd, refs)
 	members, err := resolveMembers(tc, refs)
 	if err != nil {
 		return tricount.Entry{}, "", err
