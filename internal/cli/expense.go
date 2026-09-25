@@ -16,7 +16,8 @@ var expenseCmd = &cobra.Command{
 	Short:   "Expenses, and edits that apply to any transaction",
 	Long: `Expenses are NORMAL transactions: someone paid, and the cost is shared.
 
-Amounts are positive major units (12.50 or 1500), never cents. The CLI stores
+Amounts are positive exact decimals (12.50 or 1500), never cents, with at most
+two decimal places. The CLI stores
 the expense as a negative API amount. If the total does not divide evenly,
 the earliest members in --among receive the extra minor units.
 
@@ -53,7 +54,7 @@ func bindExpenseIdentity(cmd *cobra.Command) {
 
 func bindExpenseFields(cmd *cobra.Command, among bool) {
 	cmd.Flags().String("description", "", flagDescHelp)
-	cmd.Flags().Float64("amount", 0, flagAmountHelp)
+	cmd.Flags().String("amount", "", flagAmountHelp)
 	cmd.Flags().String("payer", "", flagPayerHelp)
 	if among {
 		cmd.Flags().StringSlice("among", nil, flagAmongHelp)
@@ -556,14 +557,11 @@ func readExpenseDraft(cmd *cobra.Command, tc tricount.Tricount, requireAmount bo
 			draft.foreignCode = code
 			rate := ""
 			if cmd.Flags().Changed("exchange-rate") {
-				value, err := cmd.Flags().GetFloat64("exchange-rate")
+				parsed, err := tricount.ParseRate(flagString(cmd, "exchange-rate"))
 				if err != nil {
-					return expenseDraft{}, err
+					return expenseDraft{}, fmt.Errorf("%w. Pass how many %s equal 1 %s", err, tc.Currency, code)
 				}
-				if value <= 0 {
-					return expenseDraft{}, fmt.Errorf("--exchange-rate must be a positive number of %s per 1 %s", tc.Currency, code)
-				}
-				rate = strconv.FormatFloat(value, 'f', -1, 64)
+				rate = parsed
 			} else if draft.amountSet {
 				s, err := loadSession(cmdCtx(cmd))
 				if err != nil {
@@ -707,12 +705,12 @@ func init() {
 	expenseGetCmd.Flags().String("transaction", "", flagTxHelp)
 	bindExpenseFields(expenseAddCmd, true)
 	expenseAddCmd.Flags().String("currency", "", flagCurrencyHelp)
-	expenseAddCmd.Flags().Float64("exchange-rate", 0, flagRateHelp)
+	expenseAddCmd.Flags().String("exchange-rate", "", flagRateHelp)
 	bindExpenseFields(expenseSplitCmd, false)
 	expenseSplitCmd.Flags().StringSlice("share", nil, flagShareHelp)
 	bindExpenseFields(expenseRatioCmd, false)
 	expenseRatioCmd.Flags().String("currency", "", flagCurrencyHelp)
-	expenseRatioCmd.Flags().Float64("exchange-rate", 0, flagRateHelp)
+	expenseRatioCmd.Flags().String("exchange-rate", "", flagRateHelp)
 	expenseRatioCmd.Flags().StringSlice("ratio", nil, flagRatioHelp)
 	bindExpenseFields(expenseEditCmd, true)
 	expenseEditCmd.Flags().String("transaction", "", flagTxHelp)

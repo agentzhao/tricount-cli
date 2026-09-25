@@ -121,7 +121,8 @@ Output:
   Destructive commands never prompt. Pass --yes to confirm them.
 
 Amounts:
-  Pass positive major units such as 12.50 or 1500, never cents.
+  Pass positive exact decimals such as 12.50 or 1500, never cents.
+  At most two decimal places. 1.005 is rejected.
   The API stores expenses as negative numbers. The CLI applies that sign.
 
 Workflow:

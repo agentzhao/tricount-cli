@@ -105,7 +105,7 @@ Next:
 func init() {
 	bindTarget(incomeAddCmd)
 	incomeAddCmd.Flags().String("description", "", flagDescHelp)
-	incomeAddCmd.Flags().Float64("amount", 0, flagAmountHelp)
+	incomeAddCmd.Flags().String("amount", "", flagAmountHelp)
 	incomeAddCmd.Flags().String("receiver", "", flagReceiverHelp)
 	incomeAddCmd.Flags().StringSlice("among", nil, "Members who share the income. Repeat or comma-separate.")
 	incomeAddCmd.Flags().String("category", "", flagCategoryHelp)

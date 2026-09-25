@@ -4,7 +4,7 @@ Command-line client for [Tricount](https://tricount.com) expense groups. It spea
 
 Output is JSON, with `ok` and `data` on every successful command. `--help` on each command lists the usual next commands. `--human` prints a one-line summary as text. Errors go to stderr.
 
-A group is identified by the sharing token in `https://tricount.com/tABC123xyz`. Anyone with that token can read and edit the group. The first API call creates device credentials at `~/.config/tricount/credentials.json` (override with `--credentials` or `TRICOUNT_CREDENTIALS`). Amounts are positive major units, such as `12.50` or `1500`, never cents.
+A group is identified by the sharing token in `https://tricount.com/tABC123xyz`. Anyone with that token can read and edit the group. The first API call creates device credentials at `~/.config/tricount/credentials.json` (override with `--credentials` or `TRICOUNT_CREDENTIALS`). Amounts are positive exact decimals in major units, such as `12.50` or `1500`, never cents. More than two decimal places (`1.005`) is rejected. Exchange rates are exact decimals too.
 
 ## Commands
 

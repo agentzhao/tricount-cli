@@ -95,7 +95,7 @@ func init() {
 	bindTarget(reimbursementAddCmd)
 	reimbursementAddCmd.Flags().String("payer", "", "Member who pays. Display name or membership UUID.")
 	reimbursementAddCmd.Flags().String("receiver", "", flagReceiverHelp)
-	reimbursementAddCmd.Flags().Float64("amount", 0, flagAmountHelp)
+	reimbursementAddCmd.Flags().String("amount", "", flagAmountHelp)
 	reimbursementAddCmd.Flags().String("description", "", "Label for the payment. Default: Reimbursement.")
 	reimbursementAddCmd.Flags().String("date", "", flagDateHelp)
 	reimbursementCmd.AddCommand(reimbursementAddCmd)

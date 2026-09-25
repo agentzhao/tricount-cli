@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -46,13 +45,9 @@ func normalizeCurrency(s string) (string, error) {
 
 func positiveAmount(cmd *cobra.Command) (int64, error) {
 	if !cmd.Flags().Changed("amount") {
-		return 0, fmt.Errorf("pass --amount as a positive number in major units, such as 12.50 or 1500. Do not pass cents")
+		return 0, fmt.Errorf("pass --amount as a positive decimal in major units, such as 12.50 or 1500. Do not pass cents")
 	}
-	v, err := cmd.Flags().GetFloat64("amount")
-	if err != nil {
-		return 0, err
-	}
-	minor, err := tricount.MinorFromMajor(v)
+	minor, err := tricount.ParseMajorExact(flagString(cmd, "amount"))
 	if err != nil {
 		return 0, err
 	}
@@ -174,13 +169,9 @@ func parseShareFlags(vals []string) ([]shareSpec, error) {
 	}
 	out := make([]shareSpec, 0, len(pairs))
 	for _, p := range pairs {
-		f, err := strconv.ParseFloat(p.value, 64)
+		minor, err := tricount.ParseMajorExact(p.value)
 		if err != nil {
-			return nil, fmt.Errorf("share amount %q is not a number. Use Name=12.50", p.value)
-		}
-		minor, err := tricount.MinorFromMajor(f)
-		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("share for %s: %w. Use Name=12.50", p.ref, err)
 		}
 		if minor <= 0 {
 			return nil, fmt.Errorf("share for %s must be a positive amount in major units", p.ref)
@@ -217,12 +208,11 @@ type ratioSpec struct {
 }
 
 func convertMinor(foreignMinor int64, rate string) (int64, error) {
-	f, err := strconv.ParseFloat(strings.TrimSpace(rate), 64)
-	if err != nil || f <= 0 || math.IsNaN(f) || math.IsInf(f, 0) {
-		return 0, fmt.Errorf("exchange rate %q must be a positive number. 150 means 1 unit of --currency equals 150 units of the group currency", rate)
+	minor, err := tricount.ConvertMinor(foreignMinor, rate)
+	if err != nil {
+		return 0, fmt.Errorf("%w. 150 means 1 unit of --currency equals 150 units of the group currency", err)
 	}
-	major := float64(foreignMinor) / 100
-	return int64(math.Round(major * f * 100)), nil
+	return minor, nil
 }
 
 func equalAllocs(uuids []string, groupTotal int64, localTotal int64, hasLocal bool) ([]tricount.Alloc, error) {
