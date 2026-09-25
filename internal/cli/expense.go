@@ -74,30 +74,23 @@ var expenseListCmd = &cobra.Command{
 amount_raw keeps the API sign. type_meaning says expense, income, or
 reimbursement. Use the id with expense get, expense edit, or expense delete.
 
+Filter with --since, --until, --type, and --member. --offset and --limit
+page through matches, oldest first. --format jsonl or csv prints the rows
+without the ok/data envelope.
+
 Next:
   tricount expense get --help
   tricount expense add --help
   tricount balance show --help`,
-	Example: `  tricount expense list --token tABC123xyz`,
+	Example: `  tricount expense list --token tABC123xyz
+  tricount expense list --token tABC123xyz --since 2026-01-01 --until 2026-01-31 --type expense --member Alice --limit 20
+  tricount expense list --token tABC123xyz --format csv`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		tc, err := resolveRead(cmd)
 		if err != nil {
 			return err
 		}
-		views := make([]txView, 0, len(tc.Transactions))
-		for _, tx := range sortedTx(tc.Transactions) {
-			views = append(views, viewTransaction(tc, tx))
-		}
-		return writeResult(cmd, Result{
-			Summary: fmt.Sprintf("%s has %d transactions.", tc.Title, len(views)) + archivedSuffix(tc),
-			Data: map[string]any{
-				"group":        viewSummary(tc),
-				"transactions": views,
-				"count":        len(views),
-				"notes":        amountNotes,
-			},
-			Human: formatTransactions(views),
-		})
+		return runExpenseList(cmd, tc)
 	},
 }
 
@@ -734,6 +727,13 @@ func init() {
 		bindTarget(cmd)
 	}
 	expenseGetCmd.Flags().String("transaction", "", flagTxHelp)
+	expenseListCmd.Flags().String("since", "", "Include transactions on or after this time. YYYY-MM-DD or RFC3339. A date starts at midnight.")
+	expenseListCmd.Flags().String("until", "", "Include transactions on or before this time. YYYY-MM-DD includes that whole day.")
+	expenseListCmd.Flags().String("type", "", "expense, income, or reimbursement.")
+	expenseListCmd.Flags().String("member", "", "Keep transactions where this member paid or shares the split. Display name or membership UUID.")
+	expenseListCmd.Flags().String("limit", "", "Maximum matching transactions to return, after --offset. Omit to return every match.")
+	expenseListCmd.Flags().String("offset", "", "Skip this many matching transactions. Order is oldest first.")
+	expenseListCmd.Flags().String("format", "json", "json, jsonl, or csv. jsonl and csv print transactions only, without the ok/data envelope.")
 	bindExpenseFields(expenseAddCmd, true)
 	expenseAddCmd.Flags().String("currency", "", flagCurrencyHelp)
 	expenseAddCmd.Flags().String("exchange-rate", "", flagRateHelp)

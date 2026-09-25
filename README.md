@@ -8,7 +8,7 @@ Output is JSON, with `ok` and `data` on every successful command. `--help` on ea
 {"ok":false,"error":{"code":"member_not_found","message":"no member \"Cara\"","hint":"List them with: tricount member list"}}
 ```
 
-Stable codes include `usage`, `missing_target`, `missing_amount`, `invalid_amount`, `invalid_exchange_rate`, `member_not_found`, `ambiguous_member`, `missing_member`, `transaction_not_found`, `confirmation_required`, `group_archived`, `idempotency_conflict`, `invalid_idempotency_key`, `api_error`, and `error`.
+Stable codes include `usage`, `missing_target`, `missing_amount`, `invalid_amount`, `invalid_exchange_rate`, `invalid_filter`, `member_not_found`, `ambiguous_member`, `missing_member`, `transaction_not_found`, `confirmation_required`, `group_archived`, `idempotency_conflict`, `invalid_idempotency_key`, `api_error`, and `error`.
 
 A group is identified by the sharing token in `https://tricount.com/tABC123xyz`. Anyone with that token can read and edit the group. The first API call creates device credentials at `~/.config/tricount/credentials.json` (override with `--credentials` or `TRICOUNT_CREDENTIALS`). Amounts are positive exact decimals in major units, such as `12.50` or `1500`, never cents. More than two decimal places (`1.005`) is rejected. Exchange rates are exact decimals too.
 
@@ -37,7 +37,7 @@ tricount
 │   ├── delete               Delete a transaction (--yes)
 │   ├── edit                 Edit any transaction
 │   ├── get                  Read one transaction
-│   ├── list                 List transactions
+│   ├── list                 List transactions (--since --until --type --member --limit --format)
 │   ├── ratio                Split by integer ratios
 │   └── split                Exact amount per member
 ├── group

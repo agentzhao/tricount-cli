@@ -66,6 +66,10 @@ func optionalAmount(cmd *cobra.Command) (int64, bool, error) {
 }
 
 func parseWhen(s string) (time.Time, error) {
+	return parseWhenFlag(s, "date")
+}
+
+func parseWhenFlag(s, flag string) (time.Time, error) {
 	s = strings.TrimSpace(s)
 	layouts := []string{
 		time.RFC3339,
@@ -81,7 +85,7 @@ func parseWhen(s string) (time.Time, error) {
 		}
 		last = err
 	}
-	return time.Time{}, fmt.Errorf("could not parse --date %q (%v). Use YYYY-MM-DD or RFC3339", s, last)
+	return time.Time{}, fmt.Errorf("could not parse --%s %q (%v). Use YYYY-MM-DD or RFC3339", flag, s, last)
 }
 
 func optionalWhen(cmd *cobra.Command) (*time.Time, error) {
